@@ -1,0 +1,5 @@
+lightning
+transformers
+wandb
+datasets
+python-decouple
