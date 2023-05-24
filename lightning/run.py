@@ -3,9 +3,6 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning_module import LitMNIST, MNISTDataModule, pl
 from argparse import ArgumentParser
 
-from decouple import config
-LOG_ROOT = config('LOG_ROOT')
-
 # wandb.init(settings=wandb.Settings(code_dir="."), project='MNIST')
 
 def main(hparams):    
@@ -13,7 +10,6 @@ def main(hparams):
         log_model=True, 
         settings=wandb.Settings(code_dir="."), 
         project='MNIST_test',
-        log_root=LOG_ROOT,
     )
     
     # setup data
@@ -35,8 +31,6 @@ def main(hparams):
         accelerator=hparams.accelerator, devices=hparams.devices,
         callbacks=[checkpoint_callback],        
     )
-    
-    Dataloader(dataset, num_workers=8, pin_memory=True)
 
     trainer.fit(model, mnist)
 
