@@ -1,5 +1,7 @@
+torch
+torchvision
 lightning
 transformers
 wandb
 datasets
-python-decouple
+pytorch-lightning[extra]

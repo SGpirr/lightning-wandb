@@ -13,9 +13,7 @@ import lightning.pytorch as pl
 # Dataset
 from torchvision.datasets import MNIST
 from torchvision import transforms
-import torchmetrics
-
-
+from torchmetrics.functional.classification import multiclass_accuracy as accuracy
 
 ## model module
 class LitMNIST(pl.LightningModule):
@@ -30,11 +28,12 @@ class LitMNIST(pl.LightningModule):
         self.layer_2 = torch.nn.Linear(n_layer_1, n_layer_2)
         self.layer_3 = torch.nn.Linear(n_layer_2, n_classes)
 
+        
+        self.n_classes = n_classes
         # optimizer parameters
         self.lr = lr
-
-        # metrics
-        self.accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=n_classes)
+        
+        self.loss = nn.CrossEntropyLoss()
 
         # optional - save hyper-parameters to self.hparams
         # they will also be automatically logged as config parameters in W&B
@@ -58,60 +57,61 @@ class LitMNIST(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         '''needs to return a loss from a single batch'''
-        x, y = batch
-        logits = self(x)
-        loss = F.nll_loss(logits, y)
-
-        # Log training loss
+        _, loss, acc = self._get_preds_loss_accuracy(batch)
+        # Log loss and metric
         self.log('train_loss', loss)
+        self.log('train_accuracy', acc)
 
-        # Log metrics
-        self.accuracy(logits, y)
-        self.log('train_acc', self.accuracy)
 
         return loss
 
+
     def validation_step(self, batch, batch_idx):
         '''used for logging metrics'''
-        x, y = batch
-        logits = self(x)
-        loss = F.nll_loss(logits, y)
-
-        # Log validation loss (will be automatically averaged over an epoch)
-        self.log('valid_loss', loss)
-
-        # Log metrics
-        self.accuracy(logits, y)
-        self.log('valid_acc', self.accuracy)
+        preds, loss, acc = self._get_preds_loss_accuracy(batch)
+        # Log loss and metric
+        self.log('val_loss', loss)
+        self.log('val_accuracy', acc)
         
+        if batch_idx == 0:
+            n = 20
+            x, y = batch
+            images = [img for img in x[:n]]
+            captions = [f'Ground Truth: {y_i} - Prediction: {y_pred}' for y_i, y_pred in zip(y[:n], preds[:n])]
+            
+            self.logger.log_image(key='sample_images', images=images, caption=captions)
+
+        # Let's return preds to use it in a custom callback
+        return preds
 
     def test_step(self, batch, batch_idx):
         '''used for logging metrics'''
+        _, loss, acc = self._get_preds_loss_accuracy(batch)
+        # Log loss and metric
+        self.log('test_loss', loss)
+        self.log('test_accuracy', acc)
+
+    
+    def _get_preds_loss_accuracy(self, batch):
+        '''convenience function since train/valid/test steps are similar'''
         x, y = batch
         logits = self(x)
-        loss = F.nll_loss(logits, y)
+        preds = torch.argmax(logits, dim=1)
+        loss = self.loss(logits, y)
+        acc = accuracy(preds, y, num_classes=self.n_classes)
+        return preds, loss, acc
 
-        # Log test loss
-        self.log('test_loss', loss)
-
-        # Log metrics
-        self.accuracy(logits, y)
-        self.log('test_acc', self.accuracy)
-    
-    def configure_optimizers(self):
-        '''defines model optimizer'''
-        return Adam(self.parameters(), lr=self.lr)
-    
     
     
     
 ## data module
 class MNISTDataModule(pl.LightningDataModule):
 
-    def __init__(self, data_dir='./', batch_size=256):
+    def __init__(self, data_dir='./', batch_size=256, num_workers=16):
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
+        self.num_workers = num_workers
         self.transform = transforms.ToTensor()
 
     def prepare_data(self):
@@ -131,15 +131,15 @@ class MNISTDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         '''returns training dataloader'''
-        mnist_train = DataLoader(self.mnist_train, batch_size=self.batch_size)
+        mnist_train = DataLoader(self.mnist_train, batch_size=self.batch_size, num_workers=self.num_workers)
         return mnist_train
 
     def val_dataloader(self):
         '''returns validation dataloader'''
-        mnist_val = DataLoader(self.mnist_val, batch_size=self.batch_size)
+        mnist_val = DataLoader(self.mnist_val, batch_size=self.batch_size, num_workers=self.num_workers)
         return mnist_val
 
     def test_dataloader(self):
         '''returns test dataloader'''
-        mnist_test = DataLoader(self.mnist_test, batch_size=self.batch_size)
+        mnist_test = DataLoader(self.mnist_test, batch_size=self.batch_size, num_workers=self.num_workers)
         return mnist_test

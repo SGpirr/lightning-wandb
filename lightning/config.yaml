@@ -13,20 +13,15 @@ fit:
           log_model: true
           project: 'MNIST_test'
           save_dir: '../logs'
-          # name: 'version1'
-          settings:
-            class_path: wandb.Settings
-            init_args:
-              code_dir: "."
 
     callbacks:
       - class_path: lightning.pytorch.callbacks.EarlyStopping
         init_args:
           patience: 5
-          monitor: 'valid_acc'
+          monitor: 'val_accuracy'
       - class_path: lightning.pytorch.callbacks.ModelCheckpoint
         init_args:
-          monitor: 'valid_acc'
+          monitor: 'val_accuracy'
           mode: 'max'
           save_top_k: 2
           filename: 'mnist-{epoch:02d}-{valid_acc:.5f}'
@@ -43,10 +38,10 @@ fit:
     limit_test_batches: null
     limit_predict_batches: null
     overfit_batches: 0.0
-    val_check_interval: null
+    val_check_interval: 1.0
     check_val_every_n_epoch: 1
     num_sanity_val_steps: null
-    log_every_n_steps: null
+    log_every_n_steps: 10
     enable_checkpointing: null
     enable_progress_bar: null
     enable_model_summary: null
@@ -67,7 +62,26 @@ fit:
 
   ckpt_path: null
   
+  data:
+    num_workers: 16
+    batch_size: 256
+  
   model:
     n_layer_1: 128
     n_layer_2: 256
     lr: 1e-3
+    
+  optimizer:
+    class_path: torch.optim.AdamW
+    init_args:
+      lr: 5e-5
+      eps: 1e-8
+      weight_decay: 0.01
+      
+  lr_scheduler:
+    class_path: torch.optim.lr_scheduler.CosineAnnealingLR
+    init_args:
+      T_max: 100
+      eta_min: 0
+
+
