@@ -15,7 +15,3 @@ python -m ipykernel install --user --name $CONDA_ENV --display-name $CONDA_ENV
 pip install -r requirements.txt
 ```
 
-### create directories
-```bash
-bash create_dirs.sh
-```
