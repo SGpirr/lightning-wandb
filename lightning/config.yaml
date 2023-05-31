@@ -2,8 +2,8 @@
 fit:
   seed_everything: 4
   trainer:
-    accelerator: 'gpu'
-    strategy: 'ddp'
+    accelerator: 'auto'
+    strategy: 'auto'
     devices: -1
     num_nodes: 1
     precision: '16-mixed'
