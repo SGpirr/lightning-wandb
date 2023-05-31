@@ -24,7 +24,7 @@ fit:
           monitor: 'val_accuracy'
           mode: 'max'
           save_top_k: 2
-          filename: 'mnist-{epoch:02d}-{valid_acc:.5f}'
+          filename: 'mnist-{epoch:02d}-{val_accuracy:.5f}'
           # auto_insert_metric_name: true
           
     fast_dev_run: false
