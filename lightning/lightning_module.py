@@ -21,7 +21,6 @@ class LitMNIST(pl.LightningModule):
     def __init__(self, n_classes=10, n_layer_1=128, n_layer_2=256, lr=1e-3):
         '''method used to define our model parameters'''
         super().__init__()
-        self.save_hyperparameters()
 
         # mnist images are (1, 28, 28) (channels, width, height)
         self.layer_1 = torch.nn.Linear(28 * 28, n_layer_1)

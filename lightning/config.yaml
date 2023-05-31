@@ -63,6 +63,7 @@ fit:
   ckpt_path: null
   
   data:
+    data_dir: '..'
     num_workers: 16
     batch_size: 256
   
