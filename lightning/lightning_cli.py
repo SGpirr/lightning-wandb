@@ -1,6 +1,4 @@
-import wandb
-from lightning.pytorch.loggers import WandbLogger
-from lightning_module import LitMNIST, MNISTDataModule, pl
+from lightning_module import LitMNIST, MNISTDataModule
 from lightning.pytorch.cli import LightningCLI
             
             
