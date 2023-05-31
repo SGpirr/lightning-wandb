@@ -5,3 +5,8 @@ transformers
 wandb
 datasets
 pytorch-lightning[extra]
+
+fastapi
+uvicorn[standard]
+python-multipart
+pillow
